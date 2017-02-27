@@ -27,7 +27,6 @@ public class OI {
 	public double getRightY() {
 		return xbox.getRawAxis(5);
 	}
-	//WWHAT BUTTON AM I PRESIN!!?!
 	public boolean buttonAPressed(){
 		return xbox.getRawButton(1);
 	}

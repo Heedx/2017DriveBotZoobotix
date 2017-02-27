@@ -13,7 +13,6 @@ import org.usfirst.frc.team6002.robot.subsystems.Drive;
 import org.usfirst.frc.team6002.robot.subsystems.Climber;
 import org.usfirst.frc.team6002.robot.subsystems.Rollers;
 import org.usfirst.frc.team6002.robot.subsystems.Shooter;
-
 import org.usfirst.frc.team6002.robot.subsystems.GearArm;
 
 /**
@@ -49,7 +48,6 @@ public class Robot extends IterativeRobot {
 		
 		// chooser.addObject("My Auto", new MyAutoCommand());
 		SmartDashboard.putData("Auto mode", chooser);
-
    	}
 
 	/**
@@ -117,14 +115,13 @@ public class Robot extends IterativeRobot {
 		Robot.shooter.shooterInitialize();
 		Robot.geararm.gearArmInit();
 	}
-
-	int counter = 0;
 	
     boolean aLastVal = false;
     boolean currVal = false;
 	
     boolean last1Val = false;
     boolean curr1Val = false;
+
     boolean intakeToggle = false;
 	/**
 	 * This function is called periodically during operator control
@@ -133,16 +130,29 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
 		while(isOperatorControl() && isEnabled()){
+			//Check sensors, inputs, safety
+
+			//Go thru robot states
+			//Chassis
+			//Shooter
+			//Gear Arm
+			//Rollers
+			//Climber
+
+			//Loop ending
+			
+			
+/*
 			Robot.chassis.driveWithJoysticks(Robot.oi.getLeftY(), Robot.oi.getRightY());
+
 	        currVal = Robot.oi.buttonAPressed();
 	        curr1Val = Robot.oi.buttonBPressed();
+
 			//GEARARM
 			if(currVal == true && aLastVal == false){
-				//System.out.println("A");
 				//Robot.geararm.getGear();
 				dropGearAndMoveAway();
 //				getGearToggle = !getGearToggle;
-//				ALastVal = Robot.oi.buttonAPressed();
 			}
 			else if(curr1Val == true && last1Val == false){
 				Robot.geararm.restGear();
@@ -158,8 +168,6 @@ public class Robot extends IterativeRobot {
 			else{
 				//Robot.geararm.restGear();
 			}
-			aLastVal = currVal;
-			last1Val = curr1Val;
 			
 			//MANUAL SHIFTING
 			if(Robot.oi.buttonLTPressed()){
@@ -198,9 +206,7 @@ public class Robot extends IterativeRobot {
 				
 				
 			//INTAKE
-			
 			if(Robot.oi.buttonLBPressed()){
-				//counter = counter + 1;
 				intakeToggle = !intakeToggle;
 				if(intakeToggle == true){
 					Robot.roller.intakeOn();
@@ -223,6 +229,7 @@ public class Robot extends IterativeRobot {
 				//Robot.chassis.autoShift();
 			}
 		}
+		*/
 	}
 
 	/**
@@ -251,13 +258,16 @@ public class Robot extends IterativeRobot {
 		Robot.shooter.serializerOff();
 		on = false;
 	}
+
 	private void slowShooterReverse(){
 		// this function is to flush out the shooter when there is a ball inside of its chamber
 		Robot.shooter.setShooterVoltage(-0.3);
 		Robot.shooter.setSerializerSpeed(-0.3);
 	}
+
 	private void dropGearAndMoveAway(){
 		double angle = 0;
+
 		while(angle <= 0.2){
 			//System.out.println(angle);
 			Robot.chassis.drive(0.14, 0.14);
@@ -266,13 +276,13 @@ public class Robot extends IterativeRobot {
 			angle+=0.0005;
 		}
 		Robot.chassis.drive(0.0,0.0);
+
 		while(angle >= 0){
 			Robot.chassis.drive(-0.15, -0.15);
 			angle-=0.0003;
 		}
+
 		Robot.geararm.restGear();
 		Robot.chassis.drive(0.0,0.0);
-		//Robot.geararm.getGear();
-		//timer.start();
 	}
 }

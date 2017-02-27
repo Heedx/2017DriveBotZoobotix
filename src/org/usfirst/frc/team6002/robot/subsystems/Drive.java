@@ -1,6 +1,8 @@
 package org.usfirst.frc.team6002.robot.subsystems;
 
 import org.usfirst.frc.team6002.robot.Constants;
+import org.usfirst.frc.team6002.robot.DummyPIDOutput;
+import edu.wpi.first.wpilibj.PIDOutput;
 import org.usfirst.frc.team6002.robot.Robot;
 
 import com.ctre.CANTalon;
@@ -8,8 +10,10 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.VictorSP;
 
 
 /**
@@ -23,20 +27,38 @@ public class Drive extends Subsystem {
 	int kForward = 1;
 	int kReverse = 0;
 	
-	private static AHRS ahrs = new AHRS(SPI.Port.kMXP);
+	private static AHRS gyro = new AHRS(SPI.Port.kMXP);
+
 	private static CANTalon leftFrontMotor = new CANTalon(Constants.kLeftFrontMotorId);
 	private static CANTalon leftBackMotor = new CANTalon(Constants.kLeftBackMotorId);
 	private static CANTalon rightFrontMotor = new CANTalon(Constants.kRightFrontMotorId);
 	private static CANTalon rightBackMotor = new CANTalon(Constants.kRightBackMotorId);
+
+    //DO NOT USE THESE AS ACTUAL MOTORS. ALSO DO NOT CONNECT MOTORS TO THEIR PORTS
+    //These are motors used to get the output of the driving and turning pid loops.
+    //FRC PID controllers requires a motor and writes to that single motor immediately
+    //However, we want to that that output and use it with other motors
+    private static VictorSP drivePIDDummy = new VictorSP(20);
+    private static VictorSP turnPIDDummy = new VictorSP(21);
+
+    //Dummy classes used to hold the output from the PIDController.
+    PIDOutput drivePIDOutput = new DummyPIDOutput();
+    PIDOutput turnPIDOutput = new DummyPIDOutput();
+
+    PIDController drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, leftFrontMotor.getPIDSourceType(), drivePIDOutput);
+    PIDController turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro.getPIDSourceType(), turnPIDOutput);
+
 	private static Compressor airC = new Compressor(Constants.kCompressorId);
+
 	private static DoubleSolenoid gearShiftSolenoid = new DoubleSolenoid(0, 1);
 	private static boolean enabled = airC.enabled();
-	private boolean isItInHighGear = false;
+	private static boolean isItInHighGear = false;
 	
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
         //setDefaultCommand(new MySpecialCommand());
     }
+
     public void motorInit(){
 
         //initialize motors in percentvbus for master motors, and follower for slave motors
@@ -44,16 +66,17 @@ public class Drive extends Subsystem {
         leftFrontMotor.set(0.0);
         leftBackMotor.changeControlMode(CANTalon.TalonControlMode.Follower);
     	leftBackMotor.set(leftFrontMotor.getDeviceID());
+
         rightFrontMotor.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
     	rightFrontMotor.set(0.0);
         rightBackMotor.changeControlMode(CANTalon.TalonControlMode.Follower);
     	rightBackMotor.set(rightFrontMotor.getDeviceID());
     	
-        //Break mode
-        leftFrontMotor.enableBrakeMode(false);
-        leftBackMotor.enableBrakeMode(false);
-        rightFrontMotor.enableBrakeMode(false);
-    	rightBackMotor.enableBrakeMode(false);
+        //Brake mode
+        leftFrontMotor.enableBrakeMode(true);
+        leftBackMotor.enableBrakeMode(true);
+        rightFrontMotor.enableBrakeMode(true);
+    	rightBackMotor.enableBrakeMode(true);
 
     	//Encoder initialization
         leftFrontMotor.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
@@ -77,12 +100,7 @@ public class Drive extends Subsystem {
         rightFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
         rightFrontMotor.setProfile(0);
         leftFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
-        leftFrontMotor.setProfile(0);
-              
-
-        
-    	
-        
+        leftFrontMotor.setProfile(0);   
     }
     public void compressorOn(){
     	airC.setClosedLoopControl(true);
@@ -100,7 +118,6 @@ public class Drive extends Subsystem {
     	rightFrontMotor.set(-rightDrive);
     }
     
-
     public void setHighGear(){
     	gearShiftSolenoid.set(DoubleSolenoid.Value.kForward);
     	//System.out.println("Forward");

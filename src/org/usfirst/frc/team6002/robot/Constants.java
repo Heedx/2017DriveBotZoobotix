@@ -12,6 +12,14 @@ public class Constants {
 	public static double kShiftTarget = 1000;
 	
 	//Drive PID values
+	public static final double kPDriving = 0.0;
+	public static final double kIDriving = 0.0;
+	public static final double kDDriving = 0.0;
+
+	public static final double kPTurning = 0.0;
+	public static final double kITurning = 0.0;
+	public static final double kDTurning = 0.0;
+
 	public static final double kPDriveVelocity = 0.5;
 	public static final double kIDriveVelocity = 0.0;
 	public static final double kDDriveVelocity = 0.0;
