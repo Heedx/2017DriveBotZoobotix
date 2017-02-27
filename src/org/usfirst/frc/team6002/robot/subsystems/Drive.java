@@ -30,6 +30,7 @@ public class Drive extends Subsystem {
 	private static CANTalon rightBackMotor = new CANTalon(Constants.kRightBackMotorId);
 	private static Compressor airC = new Compressor(Constants.kCompressorId);
 	private static DoubleSolenoid gearShiftSolenoid = new DoubleSolenoid(0, 1);
+	private static boolean enabled = airC.enabled();
 	private boolean isItInHighGear = false;
 	
     public void initDefaultCommand() {
@@ -85,15 +86,19 @@ public class Drive extends Subsystem {
     }
     public void compressorOn(){
     	airC.setClosedLoopControl(true);
-    	boolean enabled = airC.enabled();
+    	
     	System.out.println(enabled);
     }
     
-    public void drive(double leftValue, double rightValue){
+    public void driveWithJoysticks(double leftValue, double rightValue){
     	leftFrontMotor.set(-(leftValue*leftValue*leftValue)); // cube each value to decrease sensitivity.
     	rightFrontMotor.set((rightValue*rightValue*rightValue));
     }
 	
+    public void drive(double leftDrive, double rightDrive){
+    	leftFrontMotor.set(leftDrive); // cube each value to decrease sensitivity.
+    	rightFrontMotor.set(-rightDrive);
+    }
     
 
     public void setHighGear(){
@@ -120,6 +125,8 @@ public class Drive extends Subsystem {
     	//System.out.println("leftFrontMotor RPM is:" + leftFrontMotor.getEncVelocity());
     	return rightFrontMotor.getEncVelocity();
     }
+    
+    /*
     public void autoShift(){
     	//check if bothsides are above the target. If both sides are above speed,
     	//then the gearshift will shift up.
@@ -134,6 +141,7 @@ public class Drive extends Subsystem {
 				Robot.chassis.setLowGear();
 		}
 	}
+	*/
 }
 
  

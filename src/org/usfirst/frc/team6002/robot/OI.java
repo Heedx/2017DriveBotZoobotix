@@ -3,8 +3,6 @@ package org.usfirst.frc.team6002.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.buttons.Button;
 
-import org.usfirst.frc.team6002.robot.commands.ExampleCommand;
-
 /**
  * This class is the glue that binds the controls on the physical operator
  * interface to the commands and command groups that allow control of the robot.
@@ -17,7 +15,11 @@ public class OI {
 	// number it is.
 	// Joystick stick = new Joystick(port);
 	// Button button = new JoystickButton(stick, buttonNumber);
-	public Joystick xbox = new Joystick(1);
+	private Joystick xbox;
+	
+	public OI(){
+		xbox = new Joystick(1);
+	}
 	
 	public double getLeftY(){
 		return xbox.getRawAxis(1);
@@ -27,28 +29,31 @@ public class OI {
 	}
 	//WWHAT BUTTON AM I PRESIN!!?!
 	public boolean buttonAPressed(){
-		return Robot.oi.xbox.getRawButton(1);
+		return xbox.getRawButton(1);
 	}
 	public boolean buttonBPressed(){
-		return Robot.oi.xbox.getRawButton(2);
+		return xbox.getRawButton(2);
 	}
 	public boolean buttonXPressed(){
-		return Robot.oi.xbox.getRawButton(3);
+		return xbox.getRawButton(3);
 	}
 	public boolean buttonYPressed(){
-		return Robot.oi.xbox.getRawButton(4);
+		return xbox.getRawButton(4);
 	}
 	public boolean buttonLBPressed(){
-		return Robot.oi.xbox.getRawButton(5);
+		return xbox.getRawButton(5);
 	}
 	public boolean buttonRBPressed(){
-		return Robot.oi.xbox.getRawButton(6);
+		return xbox.getRawButton(6);
 	}
 	public boolean buttonLTPressed(){
-		return (Robot.oi.xbox.getRawAxis(3) == 1);
+		return xbox.getRawAxis(3) == 1;
 	}
 	public boolean buttonRTPressed(){
-		return (Robot.oi.xbox.getRawAxis(2) == 1);
+		return xbox.getRawAxis(2) == 1;
+	}
+	public boolean buttonStartPressed(){
+		return xbox.getRawButton(8);
 	}
 //	public boolean buttonBPressed = Robot.oi.xbox.getRawButton(2);
 //	public boolean buttonXPressed = Robot.oi.xbox.getRawButton(3);

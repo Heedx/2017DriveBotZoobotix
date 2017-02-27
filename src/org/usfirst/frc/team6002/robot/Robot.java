@@ -2,7 +2,6 @@
 package org.usfirst.frc.team6002.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -10,15 +9,10 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.usfirst.frc.team6002.robot.commands.ExampleCommand;
-import org.usfirst.frc.team6002.robot.subsystems.ExampleSubsystem;
 import org.usfirst.frc.team6002.robot.subsystems.Drive;
 import org.usfirst.frc.team6002.robot.subsystems.Climber;
 import org.usfirst.frc.team6002.robot.subsystems.Rollers;
 import org.usfirst.frc.team6002.robot.subsystems.Shooter;
-
-import com.ctre.CANTalon;
-import com.ctre.CANTalon.TalonControlMode;
 
 import org.usfirst.frc.team6002.robot.subsystems.GearArm;
 
@@ -30,18 +24,15 @@ import org.usfirst.frc.team6002.robot.subsystems.GearArm;
  * directory.
  */
 public class Robot extends IterativeRobot {
-
-	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
-	public static OI oi;
-	public static Drive chassis;
-	public static Climber climber;
-	public static Rollers roller;
-	public static Shooter shooter;
-	public static GearArm geararm;
+	private static OI oi;
+	private static Drive chassis;
+	private static Climber climber;
+	private static Rollers roller;
+	private static Shooter shooter;
+	private static GearArm geararm;
+	
 	Command autonomousCommand;
 	SendableChooser<Command> chooser = new SendableChooser<>();
-
-	CANTalon Test = new CANTalon(6);
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -55,7 +46,7 @@ public class Robot extends IterativeRobot {
 		roller = new Rollers();
 		shooter = new Shooter();
 		geararm = new GearArm();
-		chooser.addDefault("Default Auto", new ExampleCommand());
+		
 		// chooser.addObject("My Auto", new MyAutoCommand());
 		SmartDashboard.putData("Auto mode", chooser);
 
@@ -129,6 +120,12 @@ public class Robot extends IterativeRobot {
 
 	int counter = 0;
 	
+    boolean aLastVal = false;
+    boolean currVal = false;
+	
+    boolean last1Val = false;
+    boolean curr1Val = false;
+    boolean intakeToggle = false;
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -136,19 +133,33 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
 		while(isOperatorControl() && isEnabled()){
-				Robot.chassis.drive(Robot.oi.getLeftY(), Robot.oi.getRightY());
-	        
-			
+			Robot.chassis.driveWithJoysticks(Robot.oi.getLeftY(), Robot.oi.getRightY());
+	        currVal = Robot.oi.buttonAPressed();
+	        curr1Val = Robot.oi.buttonBPressed();
 			//GEARARM
-			if(Robot.oi.buttonAPressed()){
-				Robot.geararm.getGear();
+			if(currVal == true && aLastVal == false){
+				//System.out.println("A");
+				//Robot.geararm.getGear();
+				dropGearAndMoveAway();
+//				getGearToggle = !getGearToggle;
+//				ALastVal = Robot.oi.buttonAPressed();
 			}
-			else if(Robot.oi.buttonBPressed()){
-				Robot.geararm.dropGear();
-			}
-			else{
+			else if(curr1Val == true && last1Val == false){
 				Robot.geararm.restGear();
 			}
+			
+//			if(getGearToggle = true){
+//				Robot.geararm.getGear();
+//				getGearToggle = false;
+//			}
+			//else if(Robot.oi.buttonBPressed()){
+				//Robot.geararm.dropGear();
+			//}
+			else{
+				//Robot.geararm.restGear();
+			}
+			aLastVal = currVal;
+			last1Val = curr1Val;
 			
 			//MANUAL SHIFTING
 			if(Robot.oi.buttonLTPressed()){
@@ -165,13 +176,33 @@ public class Robot extends IterativeRobot {
 			else{
 				shooterOff();
 			}
+			
+			//SHOOTER REVERSE
+//			boolean shouldIReverseShooter = false;
+			if(Robot.oi.buttonStartPressed()){
+				slowShooterReverse();
+//				shouldIReverseShooter = true;
+//				timer.start();
+//				System.out.println("starting to flush out shooter!!!!");
+//			}
+//			if(timer.get() < 2000 && shouldIReverseShooter == true){
+//				slowShooterReverse();
+//				System.out.println("flushing out shooter!");
+//			}else if(timer.get() > 2000){
+//				System.out.println("done flushing shooter out!");
+//				shooterOff();
+//				timer.reset();
+//				shouldIReverseShooter = false;
+//			}
+			}
+				
 				
 			//INTAKE
-			boolean intakeToggle = false;
+			
 			if(Robot.oi.buttonLBPressed()){
 				//counter = counter + 1;
 				intakeToggle = !intakeToggle;
-				if(intakeToggle){
+				if(intakeToggle == true){
 					Robot.roller.intakeOn();
 				}
 				else{
@@ -189,7 +220,7 @@ public class Robot extends IterativeRobot {
 			//AUTOSHIFT
 			//autoshift should be always on, so this if statement makes it so.
 			if(isEnabled()){
-				Robot.chassis.autoShift();
+				//Robot.chassis.autoShift();
 			}
 		}
 	}
@@ -202,15 +233,46 @@ public class Robot extends IterativeRobot {
 		LiveWindow.run();
 	}
 	
+	boolean on = false;
+	
 	private void shoot(){
-		Robot.roller.conveyorOn();
+		//Robot.roller.conveyorOn();
 		Robot.shooter.shooterOn();
-		Robot.shooter.serializerOn();
+		if(on == false){
+			Timer.delay(2.0);
+			Robot.shooter.serializerOn();
+			on = true;
+		}
 	}
 	
 	private void shooterOff(){
 		Robot.shooter.shooterOff();
-		Robot.roller.conveyorOff();
+		//Robot.roller.conveyorOff();
 		Robot.shooter.serializerOff();
+		on = false;
+	}
+	private void slowShooterReverse(){
+		// this function is to flush out the shooter when there is a ball inside of its chamber
+		Robot.shooter.setShooterVoltage(-0.3);
+		Robot.shooter.setSerializerSpeed(-0.3);
+	}
+	private void dropGearAndMoveAway(){
+		double angle = 0;
+		while(angle <= 0.2){
+			//System.out.println(angle);
+			Robot.chassis.drive(0.14, 0.14);
+			Robot.geararm.setDesiredAngle(angle);
+			
+			angle+=0.0005;
+		}
+		Robot.chassis.drive(0.0,0.0);
+		while(angle >= 0){
+			Robot.chassis.drive(-0.15, -0.15);
+			angle-=0.0003;
+		}
+		Robot.geararm.restGear();
+		Robot.chassis.drive(0.0,0.0);
+		//Robot.geararm.getGear();
+		//timer.start();
 	}
 }

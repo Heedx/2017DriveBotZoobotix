@@ -46,17 +46,23 @@ public class Shooter extends Subsystem {
     	masterShooter.setPID(Constants.kPShooterVoltage, Constants.kIShooterVoltage, Constants.kDShooterVoltage);
     	masterShooter.setProfile(0);
     }
+    public void setShooterVoltage(double volts){
+    	masterShooter.set(volts);
+    } 
     public void shooterOn(){
-    	masterShooter.set(0.8);
+    	setShooterVoltage(0.9);
     }
     public void shooterOff(){
-    	masterShooter.set(0.0);
+    	setShooterVoltage(0.0);
+    }
+    public void setSerializerSpeed(double speed){
+    	serializerMotor.set(speed);
     }
     public void serializerOn(){
-    	serializerMotor.set(0.5);
+    	setSerializerSpeed(0.9);
     }
     public void serializerOff(){
-    	serializerMotor.set(0.0);
+    	setSerializerSpeed(0.0);
     }
     
 }

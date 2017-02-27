@@ -31,7 +31,7 @@ public class Rollers extends Subsystem {
     	intakeMotor.set(0.0);
     }
     public void conveyorOn(){
-    	conveyorMotor.set(0.8);
+    	conveyorMotor.set(0.9);
     }
     public void conveyorOff(){
     	conveyorMotor.set(0.0);

@@ -39,7 +39,7 @@ public class Constants {
 	
 	//GEARARM
 	public static int kGearArmId = 6;
-	public static double kPGearArm = 0.133;
+	public static double kPGearArm = 0.6;
 	public static double kIGearArm = 0.0;
 	public static double kDGearArm = 0.0;
 }

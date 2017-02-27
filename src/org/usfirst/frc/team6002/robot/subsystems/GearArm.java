@@ -15,7 +15,7 @@ public class GearArm extends Subsystem {
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 	CANTalon gearArmMotor;
-
+	private boolean getGearToggle, dropGearToggle;
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
         //setDefaultCommand(new MySpecialCommand());
@@ -35,20 +35,29 @@ public class GearArm extends Subsystem {
         
     }
 	public void setDesiredAngle(double gearArmTarget){
-		gearArmMotor.changeControlMode(CANTalon.TalonControlMode.Position);
+		//gearArmMotor.changeControlMode(CANTalon.TalonControlMode.Position);
 		gearArmMotor.set(gearArmTarget);
 	}
 	public void zeroGearArmSensors(){
-		gearArmMotor.setPosition(0);
+		gearArmMotor.setPosition(0.06);
 		System.out.println("gear arm position set to 0");
 	}
 	public void restGear(){
 		setDesiredAngle(0.0);
 	}
 	public void getGear(){
-		setDesiredAngle(0.1);
+		getGearToggle = !getGearToggle;
+		setDesiredAngle(0.2);
+		System.out.println(getGearToggle);
 	}
 	public void dropGear(){
-		setDesiredAngle(0.2);
+		setDesiredAngle(0.4);
 	}
+//	public void runtoggle(boolean buttonValue){
+//		if(buttonValue && !buttonLast){
+//			buttonToggle = !buttonToggle
+//		}
+//		buttonLast = buttonValue
+//	}
+//	
 }
