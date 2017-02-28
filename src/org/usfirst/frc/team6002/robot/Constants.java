@@ -50,4 +50,13 @@ public class Constants {
 	public static double kPGearArm = 0.6;
 	public static double kIGearArm = 0.0;
 	public static double kDGearArm = 0.0;
+
+	//Robot's mechanics
+	public static int kWheelDiameter = 4;
+	public static double kWheelCircumference = kWheelDiameter * Math.pi;
+
+	//Encoder
+	public static double kPulsePerRotation = 500;
+	public static double kInchPerPulse = kWheelCircumference / kPulsePerRotation;
+
 }

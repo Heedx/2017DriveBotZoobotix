@@ -135,26 +135,43 @@ public class Drive extends Subsystem {
     	rightFrontMotor.set(-rightDrive);
     }
     
+    public void driveStraightForADistance(double distanceInInches){
+        
+    }
+
+    public int convertInchesToTicks(double inches){
+        return Math.abs(inches / Constants.kInchPerPulse);
+    }
+
+    public double convertTicksToInches(double ticks){
+        return Math.abs(ticks * Constants.kInchPerPulse);
+    }
+
     public void setHighGear(){
     	gearShiftSolenoid.set(DoubleSolenoid.Value.kForward);
     	//System.out.println("Forward");
     	isItInHighGear = true;
     }
+
     public void setLowGear(){
     	gearShiftSolenoid.set(DoubleSolenoid.Value.kReverse);
     	//System.out.println("Reverse");
     	isItInHighGear = false;
     }
+
     public double leftMotorSpeed(){
     	return leftFrontMotor.get();// only returns front motor speeds
     }
+
     public double rightMotorSpeed(){
     	return rightFrontMotor.get();// only returns front motor speeds
     }
+
     public double getRightDriveRPM(){
     	//System.out.println("rightFrontMotor RPM is:" + rightFrontMotor.getEncVelocity());
     	return leftFrontMotor.getEncVelocity();
     }
+
     public double getLeftDriveRPM(){
     	//System.out.println("leftFrontMotor RPM is:" + leftFrontMotor.getEncVelocity());
     	return rightFrontMotor.getEncVelocity();

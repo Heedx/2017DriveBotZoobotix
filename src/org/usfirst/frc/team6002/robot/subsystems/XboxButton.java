@@ -3,31 +3,32 @@ package org.usfirst.frc.team6002.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 
-public class XboxButton()
+public class XboxButton
 {
-	private bool PrevButtonVal = false, CurrButtonVal = false;
+	private boolean prevButtonVal = false;
+	private boolean currButtonVal = false;
 	JoystickButton button;
 
 	public XboxButton(JoystickButton inputButton)
 	{
 		button = inputButton;
-		PrevButtonVal = button.get();
+		prevButtonVal = button.get();
 
 	}
 
 	public void PrevButtonVal(JoystickButton inputButton)
 	{
-		PrevButtonVal = button.get();
+		prevButtonVal = button.get();
 	}
 
 	public void setCurrButtonVal(JoystickButton inputButton)
 	{
-		CurrButtonVal = button.get();
+		currButtonVal = button.get();
 	}
 
-	public bool returnCorrectDecision()
+	public boolean returnCorrectDecision()
 	{
-		if(PrevButtonVal==false && CurrButtonVal==true)
+		if(prevButtonVal==false && currButtonVal==true)
 		{
 			return true;
 		}
