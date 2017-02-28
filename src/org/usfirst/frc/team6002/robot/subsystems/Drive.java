@@ -29,31 +29,48 @@ public class Drive extends Subsystem {
 	
 	private static AHRS gyro = new AHRS(SPI.Port.kMXP);
 
-	private static CANTalon leftFrontMotor = new CANTalon(Constants.kLeftFrontMotorId);
-	private static CANTalon leftBackMotor = new CANTalon(Constants.kLeftBackMotorId);
-	private static CANTalon rightFrontMotor = new CANTalon(Constants.kRightFrontMotorId);
-	private static CANTalon rightBackMotor = new CANTalon(Constants.kRightBackMotorId);
-
-    //DO NOT USE THESE AS ACTUAL MOTORS. ALSO DO NOT CONNECT MOTORS TO THEIR PORTS
-    //These are motors used to get the output of the driving and turning pid loops.
-    //FRC PID controllers requires a motor and writes to that single motor immediately
-    //However, we want to that that output and use it with other motors
-    private static VictorSP drivePIDDummy = new VictorSP(20);
-    private static VictorSP turnPIDDummy = new VictorSP(21);
+	private static CANTalon leftFrontMotor;
+	private static CANTalon leftBackMotor;
+	private static CANTalon rightFrontMotor;
+	private static CANTalon rightBackMotor;
 
     //Dummy classes used to hold the output from the PIDController.
-    PIDOutput drivePIDOutput = new DummyPIDOutput();
-    PIDOutput turnPIDOutput = new DummyPIDOutput();
+    private PIDOutput drivePIDOutput;
+    private PIDOutput turnPIDOutput;
 
-    PIDController drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, leftFrontMotor.getPIDSourceType(), drivePIDOutput);
-    PIDController turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro.getPIDSourceType(), turnPIDOutput);
+    private PIDController drivePID;
+    private PIDController turnPID;
 
-	private static Compressor airC = new Compressor(Constants.kCompressorId);
+	private static Compressor airC;
 
-	private static DoubleSolenoid gearShiftSolenoid = new DoubleSolenoid(0, 1);
-	private static boolean enabled = airC.enabled();
-	private static boolean isItInHighGear = false;
+	private static DoubleSolenoid gearShiftSolenoid;
+	private static boolean enabled;
+	private static boolean isItInHighGear; 
 	
+    public Drive(){
+        gyro = new AHRS(SPI.Port.kMXP);
+
+        drivePIDOutput = new DummyPIDOutput();
+        turnPIDOutput = new DummyPIDOutput();
+
+        leftFrontMotor = new CANTalon(Constants.kLeftFrontMotorId);
+        leftBackMotor = new CANTalon(Constants.kLeftBackMotorId);
+        rightFrontMotor = new CANTalon(Constants.kRightFrontMotorId);
+        rightBackMotor = new CANTalon(Constants.kRightBackMotorId);
+
+        //Initialize motors
+        motorInit();
+
+        drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, leftFrontMotor, drivePIDOutput);
+        turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro, turnPIDOutput);
+
+        airC = new Compressor(Constants.kCompressorId);
+
+        gearShiftSolenoid = new DoubleSolenoid(0, 1);
+        enabled = airC.enabled();
+        isItInHighGear = false;
+    }
+
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
         //setDefaultCommand(new MySpecialCommand());
@@ -95,13 +112,13 @@ public class Drive extends Subsystem {
         rightFrontMotor.reverseSensor(false);//change this as needed
         rightFrontMotor.reverseOutput(false);//change this as needed        
         
-        
     	//load PID values
         rightFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
         rightFrontMotor.setProfile(0);
         leftFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
         leftFrontMotor.setProfile(0);   
     }
+    
     public void compressorOn(){
     	airC.setClosedLoopControl(true);
     	
