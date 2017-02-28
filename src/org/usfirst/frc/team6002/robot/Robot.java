@@ -63,6 +63,7 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void disabledPeriodic() {
 		Scheduler.getInstance().run();
+		chassis.driveStraightForADistance(60);
 	}
 
 	/**
@@ -108,7 +109,6 @@ public class Robot extends IterativeRobot {
 		// this line or comment it out.
 		if (autonomousCommand != null)
 			autonomousCommand.cancel();
-		Robot.chassis.motorInit();
 		Robot.chassis.compressorOn();
 		Robot.climber.climberInit();
 		Robot.roller.rollerInit();
@@ -130,8 +130,6 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
 		while(isOperatorControl() && isEnabled()){
-
-			chassis.driveStraightForADistance(60);
 			//Check sensors, inputs, safety
 
 			//Go thru robot states

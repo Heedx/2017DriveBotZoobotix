@@ -3,7 +3,10 @@ package org.usfirst.frc.team6002.robot.subsystems;
 import org.usfirst.frc.team6002.robot.Constants;
 import org.usfirst.frc.team6002.robot.DummyPIDOutput;
 import edu.wpi.first.wpilibj.PIDOutput;
+import edu.wpi.first.wpilibj.PIDSource;
+
 import org.usfirst.frc.team6002.robot.Robot;
+import org.usfirst.frc.team6002.robot.TalonEncoderPIDSource;
 
 import com.ctre.CANTalon;
 import com.kauailabs.navx.frc.AHRS;
@@ -41,6 +44,9 @@ public class Drive extends Subsystem {
     private PIDController drivePID;
     private PIDController turnPID;
 
+    //Custom made PIDSource class to return a talon's encoder value
+    private PIDSource talonEncoder;
+
 	private static Compressor airC;
 
 	private static DoubleSolenoid gearShiftSolenoid;
@@ -61,7 +67,9 @@ public class Drive extends Subsystem {
         //Initialize motors
         motorInit();
 
-        drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, leftFrontMotor, drivePIDOutput);
+        talonEncoder = new TalonEncoderPIDSource(leftFrontMotor);
+
+        drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, talonEncoder, drivePIDOutput);
         turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro, turnPIDOutput);
 
         airC = new Compressor(Constants.kCompressorId);
@@ -138,7 +146,7 @@ public class Drive extends Subsystem {
     public void driveStraightForADistance(double distanceInInches){
         System.out.println("Gyro: " + gyro.pidGet() + " Gyro.get(): " + gyro.getAngle()%360);
 
-        System.out.println("Encoder: " + leftFrontMotor.pidGet() + " talon.get(): " + leftFrontMotor.get();
+        System.out.println("Encoder: " + leftFrontMotor.pidGet() + " talon.get(): " + leftFrontMotor.get());
     }
 
     public double convertInchesToTicks(double inches){
