@@ -72,6 +72,9 @@ public class Drive extends Subsystem {
         drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, talonEncoder, drivePIDOutput);
         turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro, turnPIDOutput);
 
+        drivePID.setOutputRange(-1.0, 1.0);
+        turnPID.setOutputRange(-1.0, 1.0);
+
         airC = new Compressor(Constants.kCompressorId);
 
         gearShiftSolenoid = new DoubleSolenoid(0, 1);
@@ -124,7 +127,9 @@ public class Drive extends Subsystem {
         rightFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
         rightFrontMotor.setProfile(0);
         leftFrontMotor.setPID(Constants.kPDriveVelocity, Constants.kIDriveVelocity, Constants.kDDriveVelocity);
-        leftFrontMotor.setProfile(0);   
+        leftFrontMotor.setProfile(0);  
+
+        resetTalonEncoders(); 
     }
     
     public void compressorOn(){
@@ -187,7 +192,13 @@ public class Drive extends Subsystem {
     	//System.out.println("leftFrontMotor RPM is:" + leftFrontMotor.getEncVelocity());
     	return rightFrontMotor.getEncVelocity();
     }
-    
+
+    //Set the talons' encoders to 0
+    public void resetTalonEncoders(){
+        leftFrontMotor.setEncPosition(0);
+        rightFrontMotor.setEncPosition(0);
+    }
+
     /*
     public void autoShift(){
     	//check if bothsides are above the target. If both sides are above speed,

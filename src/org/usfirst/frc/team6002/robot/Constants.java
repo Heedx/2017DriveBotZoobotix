@@ -20,7 +20,7 @@ public class Constants {
 	public static final double kITurning = 0.0;
 	public static final double kDTurning = 0.0;
 
-	public static final double kPDriveVelocity = 0.5;
+	public static final double kPDriveVelocity = 0.05;
 	public static final double kIDriveVelocity = 0.0;
 	public static final double kDDriveVelocity = 0.0;
 	
