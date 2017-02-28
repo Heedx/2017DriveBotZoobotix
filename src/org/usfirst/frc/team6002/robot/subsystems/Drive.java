@@ -136,10 +136,11 @@ public class Drive extends Subsystem {
     }
     
     public void driveStraightForADistance(double distanceInInches){
-        
+        System.out.println("Gyro: " + gyro.pidGet());
+        System.out.println("Encoder: " + leftFrontMotor.pidGet());
     }
 
-    public int convertInchesToTicks(double inches){
+    public double convertInchesToTicks(double inches){
         return Math.abs(inches / Constants.kInchPerPulse);
     }
 

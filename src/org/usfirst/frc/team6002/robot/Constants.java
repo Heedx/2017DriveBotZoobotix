@@ -53,7 +53,7 @@ public class Constants {
 
 	//Robot's mechanics
 	public static int kWheelDiameter = 4;
-	public static double kWheelCircumference = kWheelDiameter * Math.pi;
+	public static double kWheelCircumference = kWheelDiameter * Math.PI;
 
 	//Encoder
 	public static double kPulsePerRotation = 500;

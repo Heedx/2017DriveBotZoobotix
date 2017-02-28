@@ -130,6 +130,8 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
 		while(isOperatorControl() && isEnabled()){
+
+			chassis.driveStraightForADistance(60);
 			//Check sensors, inputs, safety
 
 			//Go thru robot states
