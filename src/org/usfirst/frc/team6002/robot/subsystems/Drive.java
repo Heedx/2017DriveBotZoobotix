@@ -79,7 +79,7 @@ public class Drive extends Subsystem {
     public void motorInit(){
 
         //initialize motors in percentvbus for master motors, and follower for slave motors
-        leftFrontMotor.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+        leftFrontMotor.changeControlMode(CANTalon.TalonControlMode.Position);
         leftFrontMotor.set(0.0);
         leftBackMotor.changeControlMode(CANTalon.TalonControlMode.Follower);
     	leftBackMotor.set(leftFrontMotor.getDeviceID());
@@ -136,9 +136,11 @@ public class Drive extends Subsystem {
     }
     
     public void driveStraightForADistance(double distanceInInches){
+    	System.out.println("----------------------------------------------------------------");
         System.out.println("Gyro: " + gyro.pidGet() + " Gyro.get(): " + gyro.getAngle()%360);
 
-        System.out.println("Encoder: " + leftFrontMotor.pidGet() + " talon.get(): " + leftFrontMotor.get();
+        System.out.println("Encoder: " + leftFrontMotor.pidGet() + " talon.get(): " + leftFrontMotor.getPosition());
+        System.out.println("----------------------------------------------------------------");
     }
 
     public double convertInchesToTicks(double inches){
