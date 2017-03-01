@@ -1,7 +1,10 @@
 package org.usfirst.frc.team6002.robot;
 
+import java.util.ArrayList;
+
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.buttons.Button;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 
 /**
  * This class is the glue that binds the controls on the physical operator
@@ -15,44 +18,82 @@ public class OI {
 	// number it is.
 	// Joystick stick = new Joystick(port);
 	// Button button = new JoystickButton(stick, buttonNumber);
-	private Joystick xbox;
-	
+	private Joystick controller;
+	private ArrayList<XboxButton> buttons;
+
 	public OI(){
-		xbox = new Joystick(1);
+		controller = new Joystick(0);
+		buttons = new ArrayList<XboxButton>();
+		//Set up buttons with edge trigger
+		initializeButtons();
 	}
-	
+
+	/*
+	BUTTON INDEXING:
+	1 - A
+	2 - B
+	3 - X
+	4 - Y
+	5 - LB
+	6 - RB
+	*/
+
+	//Add the buttons into the array list
+	public void initializeButtons(){
+		//6 buttons
+		for(int i = 1; i <= 6; i++){
+			// JoystickButton button = new JoystickButton(controller, i);
+			// XboxButton xButton = new XboxButton(button);
+			buttons.add(new XboxButton(new JoystickButton(controller, i)));
+		}
+	}
+
+	public void getButtonCurrentValues(){
+		for(XboxButton button : buttons){
+			button.updateCurrentValue();
+		}
+	}
+
+	public void updateButtonPreviousValues(){
+		for(XboxButton button : buttons){
+			button.updatePreviousValue();
+		}
+	}
+
 	public double getLeftY(){
-		return xbox.getRawAxis(1);
+		return controller.getRawAxis(1);
 	}
 	public double getRightY() {
-		return xbox.getRawAxis(5);
+		return controller.getRawAxis(5);
 	}
-	public boolean buttonAPressed(){
-		return xbox.getRawButton(1);
+
+	public XboxButton buttonA(){
+		return buttons.get(0);
 	}
-	public boolean buttonBPressed(){
-		return xbox.getRawButton(2);
+	public XboxButton buttonB(){
+		return buttons.get(1);
 	}
-	public boolean buttonXPressed(){
-		return xbox.getRawButton(3);
+	public XboxButton buttonX(){
+		return buttons.get(2);
 	}
-	public boolean buttonYPressed(){
-		return xbox.getRawButton(4);
+	public XboxButton buttonY(){
+		return buttons.get(3);
 	}
-	public boolean buttonLBPressed(){
-		return xbox.getRawButton(5);
+	public XboxButton buttonLB(){
+		return buttons.get(4);
 	}
-	public boolean buttonRBPressed(){
-		return xbox.getRawButton(6);
+	public XboxButton buttonRB(){
+		return buttons.get(5);
 	}
+
 	public boolean buttonLTPressed(){
-		return xbox.getRawAxis(3) == 1;
+		return controller.getRawAxis(3) == 1;
 	}
 	public boolean buttonRTPressed(){
-		return xbox.getRawAxis(2) == 1;
+		return controller.getRawAxis(2) == 1;
 	}
 	public boolean buttonStartPressed(){
-		return xbox.getRawButton(8);
+		return controller.getRawButton(8);
 	}
 //	public boolean buttonBPressed = Robot.oi.xbox.getRawButton(2);
 //	public boolean buttonXPressed = Robot.oi.xbox.getRawButton(3);
