@@ -1,4 +1,3 @@
-
 package org.usfirst.frc.team6002.robot;
 
 import edu.wpi.cscore.AxisCamera;
@@ -33,12 +32,18 @@ import org.usfirst.frc.team6002.robot.subsystems.GearArm;
 public class Robot extends IterativeRobot {
 	private static OI oi;
 	private static Drive chassis;
-	//private static Climber climber;
+	private static Climber climber;
 	private static Rollers roller;
 	private static Shooter shooter;
 	private static GearArm geararm;
+
+	private static Timer timer;
+
+	private double startShootTime;
 	
-	Thread visionThread;
+	private int autoSelection;
+
+	//Thread visionThread;
 	
 	Command autonomousCommand;
 	SendableChooser<Command> chooser = new SendableChooser<>();
@@ -51,14 +56,21 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		oi = new OI();
 		chassis = new Drive();
-		//climber = new Climber();
+		climber = new Climber();
 		roller = new Rollers();
 		shooter = new Shooter();
 		geararm = new GearArm();
 
+		timer = new Timer();
+		timer.start();
+
 		// chooser.addObject("My Auto", new MyAutoCommand());
 		SmartDashboard.putData("Auto mode", chooser);
+	
+		startShootTime = 0;
 		
+		autoSelection = 0;
+
 		// Get the Axis camera from CameraServer
 		//AxisCamera camera = CameraServer.getInstance().addAxisCamera("axis-camera.local");
 		// Set the resolution
@@ -109,15 +121,14 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void disabledInit() {
-		chassis.setTalonsToVoltageControl();
-		chassis.drive(0, 0);
-		shooter.disableShooterPID();
+		// chassis.setTalonsToVoltageControl();
+		// chassis.drive(0, 0);
+		// shooter.disableShooterPID();
 	}
 
 	@Override
 	public void disabledPeriodic() {
 		Scheduler.getInstance().run();
-		System.out.println(oi.getLeftY() + " " + oi.getRightY());
 	}
 
 	/**
@@ -146,13 +157,40 @@ public class Robot extends IterativeRobot {
 		// if (autonomousCommand != null)
 		// 	autonomousCommand.start();
 
-		// chassis.resetTalonEncoders();
-		// chassis.setTalonsToSpeedControl();
-		// chassis.enableTalonsPIDLoop();
+		//Get input from the dashboard
+		boolean button1 = SmartDashboard.getBoolean("DB/Button 1", false);
+		boolean button2 = SmartDashboard.getBoolean("DB/Button 2", false);
+		boolean button3 = SmartDashboard.getBoolean("DB/Button 3", false);
 
-		// chassis.setDrivePIDSetpoint(chassis.convertInchesToTicks(60));
-		// chassis.resetDrivePID();
-        // chassis.enableDrivePID();
+		//Do nothing
+		if(button1){
+			chassis.setTalonsToVoltageControl();
+			chassis.enableTalonsControl();
+			chassis.drive(0, 0);
+		}
+		//2 - Drive straight and drop off gyro, 3 - just drive straight
+		else if(button2 || button3){
+			chassis.resetTalonEncoders();
+			chassis.setTalonsToSpeedControl();
+			chassis.enableTalonsPIDLoop();
+
+			if(button2){
+				chassis.setDrivePIDSetpoint(chassis.convertInchesToTicks(60));
+				autoSelection = 1;	
+			}
+			else{
+				chassis.setDrivePIDSetpoint(chassis.convertInchesToTicks(60));
+				autoSelection = 2;
+			}
+			chassis.resetDrivePID();
+	        chassis.enableDrivePID();
+
+	        chassis.setTurnPIDSetpoint(chassis.getGyroAngle());
+			chassis.resetTurnPID();
+	        chassis.enableTurnPID();
+		}
+
+		System.out.println("Auto selection: " + autoSelection);
 	}
 
 	/**
@@ -162,17 +200,55 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		Scheduler.getInstance().run();
 
-		/*
-		double targetRPM = chassis.getDrivePIDOutput() * Constants.kMaxDriveRPM;
+		double targetDriveRPM = 0;
+		double targetTurnRPM = 0;
+		boolean getTime = true;
+		double startTime = 0;
 
-		chassis.setLeftDriveSpeed(targetRPM);
-		chassis.setRightDriveSpeed(targetRPM);
+		if(autoSelection == 1){
+			//Steps in the autonomous sequence.
+			int step = 1;
+			
+			//Drive to the airship
+			if(step == 1){
+				targetDriveRPM = chassis.getDrivePIDOutput();
+				targetTurnRPM = chassis.getTurnPIDOutput();
 
-		System.out.println(targetRPM + " " + chassis.getDrivePIDInput() + " " + chassis.convertTicksToInches(chassis.getDrivePIDInput()) + " " + chassis.getDrivePIDSetpoint()
-			+ " " + chassis.getLeftDriveSpeed() + " " + chassis.getRightDriveSpeed());
-		*/
-		//chassis.driveStraightForADistance(4);
-		//chassis.drive(1, 0);
+				chassis.setLeftDriveSpeed((targetDriveRPM + targetTurnRPM) * Constants.kMaxDriveRPM);
+				chassis.setRightDriveSpeed((targetDriveRPM - targetTurnRPM) * Constants.kMaxDriveRPM);
+
+				if(chassis.convertTicksToInches(chassis.getDrivePIDInput()) >= chassis.getDrivePIDSetpoint() - 2){
+					//When the robot drive pass its distance setpoint, start a 1s timer.
+					if(getTime){
+						startTime = timer.get();
+						getTime = false;
+					}
+					//Once 1s pass when the robot reach its distance setpoint, go to the next step.
+					//We wait 1s to let the robot "settle" into the setpoint with PID
+					if(timer.get() - startTime >= 1){
+						step++;
+					}
+				}
+			}
+			//Drop gear
+			else if(step == 2){
+				dropGearAndMoveAway();
+			}
+			
+
+			System.out.println("L RPM:" + ((targetDriveRPM + targetTurnRPM) * Constants.kMaxDriveRPM) + "R RPM:" + ((targetDriveRPM - targetTurnRPM) * Constants.kMaxDriveRPM) 
+			+ " dist:" + chassis.convertTicksToInches(chassis.getDrivePIDInput()) + " onTarget:" + chassis.isDrivePIDOnTarget());
+		}
+		else if(autoSelection == 2){
+			targetDriveRPM = chassis.getDrivePIDOutput();
+			targetTurnRPM = chassis.getTurnPIDOutput();
+
+			chassis.setLeftDriveSpeed((targetDriveRPM + targetTurnRPM) * Constants.kMaxDriveRPM);
+			chassis.setRightDriveSpeed((targetDriveRPM - targetTurnRPM) * Constants.kMaxDriveRPM);
+
+			System.out.println("L RPM:" + ((targetDriveRPM + targetTurnRPM) * Constants.kMaxDriveRPM) + "R RPM:" + ((targetDriveRPM - targetTurnRPM) * Constants.kMaxDriveRPM) 
+			+ " dist:" + chassis.convertTicksToInches(chassis.getDrivePIDInput()) + " onTarget:" + chassis.isDrivePIDOnTarget());
+		}
 	}
 
 	@Override
@@ -189,23 +265,13 @@ public class Robot extends IterativeRobot {
 		chassis.resetTalonEncoders();
 		chassis.setTalonsToVoltageControl();
 		chassis.enableTalonsControl();
+		
 		//turn on shooter
-		shooter.enableShooterPID();
+		//shooter.enableShooterPID();
 
-		// Robot.chassis.compressorOn();
-
-		// Robot.climber.climberInit();
-		// Robot.roller.rollerInit();
-		// Robot.geararm.gearArmInit();
+		chassis.compressorOn();
 	}
 	
-    boolean aLastVal = false;
-    boolean currVal = false;
-	
-    boolean last1Val = false;
-    boolean curr1Val = false;
-
-    boolean intakeToggle = false;
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -213,187 +279,133 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
 		while(isOperatorControl() && isEnabled()){
-
-			
-
 			//Check sensors, inputs, safety
 			//Update buttons' current value
 			oi.getButtonCurrentValues();
 
-			// System.out.println(chassis.isTalonControlEnabled());
-
-			chassis.driveWithJoysticks(oi.getLeftY(), oi.getRightY());
-			// chassis.drive(0.5, 0.5);
 			//Hande controller input
 			//Button A
 			if(oi.buttonA().edgeTrigger()){
 				System.out.println("A");
+				climber.switchToggle();
 			}
-			else{
 
-			}
 			//Button B
 			if(oi.buttonB().edgeTrigger()){
 				System.out.println("B");
+				geararm.switchToggle();
 			}
-			else{
-				
-			}
+
 			//Button X
 			if(oi.buttonX().edgeTrigger()){
 				System.out.println("X");
+				geararm.switchGearToggle();
 			}
-			else{
-				
-			}
+
 			//Button Y
 			if(oi.buttonY().edgeTrigger()){
 				System.out.println("Y");
+				roller.switchIntakeToggle();
+				//Make sure reversing is off
+				roller.setReverseToggle(false);
 			}
-			else{
-				
-			}
+
 			//Button LB
 			if(oi.buttonLB().edgeTrigger()){
 				System.out.println("LB");
+				chassis.switchShiftToggle();
 			}
-			else{
-				
-			}
+
 			//Button RB
 			if(oi.buttonRB().edgeTrigger()){
 				System.out.println("RB");
+				shooter.switchToggle();
+
+				//If going to shoot, get the time that it is activing. this is used for the serializer timing
+				if(shooter.getToggle()){
+					startShootTime = timer.get();
+				}
 			}
-			else{
-				
+
+			if(oi.buttonStart().edgeTrigger()){
+				System.out.println("Start");
+				roller.switchReverseToggle();
+				//Make sure intaking is off
+				roller.setIntakeToggle(false);
 			}
-			/*
+
 			//Left Trigger 
-			if(oi.buttonA.edgeTrigger()){
+			if(oi.triggerLT().edgeTrigger()){
+				System.out.println("LT");
+			}
 
-			}
-			else{
-				
-			}
 			//Right Trigger
-			if(oi.buttonA.edgeTrigger()){
+			if(oi.triggerRT().edgeTrigger()){
+				System.out.println("RT");
+			}
 
+			
+			//Handle the climber output
+			if(climber.getToggle()){
+				climber.climberOn();
 			}
 			else{
-				
-			}
-			*/
-
-			//shooter.shooterOn();
-			// shooter.setShooterVoltage(.9);
-			//System.out.println(shooter.getShooterSpeed() + " " + shooter.getShooterSetpoint());
-			//Go thru robot states
-			//Chassis
-			//Shooter
-			//Gear Arm
-			//Rollers
-			//Climber
-
-			//Loop ending
-			//Update buttons' previous value
-			oi.updateButtonPreviousValues();
-			
-/*
-			
-
-	        currVal = Robot.oi.buttonAPressed();
-	        curr1Val = Robot.oi.buttonBPressed();
-
-			//GEARARM
-			if(currVal == true && aLastVal == false){
-				//Robot.geararm.getGear();
-				dropGearAndMoveAway();
-//				getGearToggle = !getGearToggle;
-			}
-			else if(curr1Val == true && last1Val == false){
-				Robot.geararm.restGear();
+				climber.climberOff();
 			}
 			
-//			if(getGearToggle = true){
-//				Robot.geararm.getGear();
-//				getGearToggle = false;
-//			}
-			//else if(Robot.oi.buttonBPressed()){
-				//Robot.geararm.dropGear();
-			//}
+			//Handle gear arm output
+			if(geararm.getGearToggle()){
+				geararm.getGear();
+			}
+			else if(geararm.getInboundToggle()){
+				geararm.inboundGear();
+			}
 			else{
-				//Robot.geararm.restGear();
+				geararm.homeGear();
 			}
-			*/
-			//MANUAL SHIFTING
-			// if(Robot.oi.buttonLTPressed()){
-			// 	Robot.chassis.setHighGear();
-			// }
-			// else if(Robot.oi.buttonRTPressed()){
-			// 	Robot.chassis.setLowGear();
-			// }
-			/*
-			//SHOOTER
-			/*
-			if(Robot.oi.buttonXPressed()){
+			
+			//Handle intake output
+			if(roller.getIntakeToggle()){
+				roller.intakeOn();
+			}
+			else if(roller.getReverseToggle()){
+				roller.reverse();
+			}
+			else{
+				roller.intakeOff();
+			}
+			
+			//Handle shooter
+			if(shooter.getToggle()){
 				shoot();
 			}
 			else{
 				shooterOff();
 			}
-			*/
-			/*
-			//SHOOTER REVERSE
-//			boolean shouldIReverseShooter = false;
-			if(Robot.oi.buttonStartPressed()){
-				slowShooterReverse();
-//				shouldIReverseShooter = true;
-//				timer.start();
-//				System.out.println("starting to flush out shooter!!!!");
-//			}
-//			if(timer.get() < 2000 && shouldIReverseShooter == true){
-//				slowShooterReverse();
-//				System.out.println("flushing out shooter!");
-//			}else if(timer.get() > 2000){
-//				System.out.println("done flushing shooter out!");
-//				shooterOff();
-//				timer.reset();
-//				shouldIReverseShooter = false;
-//			}
-			}
-				
-			*/	
-			//INTAKE
-			/*
-			if(Robot.oi.buttonLBPressed()){
-				//intakeToggle = !intakeToggle;
-				Robot.roller.intakeOn();
-				if(intakeToggle == true){
-					
-				}
+			
+			//shifting
+			if(chassis.getShiftToggle()){
+				chassis.setHighGear(); 
 			}
 			else{
-				Robot.roller.intakeOff();
+				chassis.setLowGear();
+			}
+			/*
+			//MANUAL SHIFTING
+			if(Robot.oi.buttonLTPressed()==true){
+				Robot.chassis.setHighGear();
+			}
+			else if(Robot.oi.buttonRTPressed()==true){
+				Robot.chassis.setLowGear();
 			}
 			*/
-			/*
-			//CLIMBER
-			/*
-			if(Robot.oi.buttonYPressed()){
-				Robot.climber.climberOn();
-			}
-			else {
-				Robot.climber.climberOff();
-			}
-			*/
-			/*
-			//AUTOSHIFT
-			//autoshift should be always on, so this if statement makes it so.
-			if(isEnabled()){
-				//Robot.chassis.autoShift();
-			}
-		}
-		*/
+
+			//Handle drive output
+			chassis.driveWithJoysticks(oi.getLeftY(), oi.getRightY());
+
+			//Loop ending
+			//Update buttons' previous value
+			oi.updateButtonPreviousValues();
 		}
 	}
 
@@ -405,23 +417,30 @@ public class Robot extends IterativeRobot {
 		LiveWindow.run();
 	}
 	
-	boolean on = false;
+	//boolean on = false;
 	
 	private void shoot(){
-		//Robot.roller.conveyorOn();
+		Robot.roller.conveyorOn();
 		Robot.shooter.shooterOn();
+
+		//Start the serializer after 2s when the shooter is activated
+		if(timer.get() - startShootTime >= 2){
+			Robot.shooter.serializerOn();
+		}
+
+		/*
 		if(on == false){
 			Timer.delay(2.0);
 			Robot.shooter.serializerOn();
 			on = true;
 		}
+		*/
 	}
 	
 	private void shooterOff(){
 		Robot.shooter.shooterOff();
-		//Robot.roller.conveyorOff();
+		Robot.roller.conveyorOff();
 		Robot.shooter.serializerOff();
-		on = false;
 	}
 
 	private void slowShooterReverse(){
@@ -435,19 +454,12 @@ public class Robot extends IterativeRobot {
 
 		while(angle <= 0.2){
 			//System.out.println(angle);
-			Robot.chassis.drive(0.14, 0.14);
+			Robot.chassis.drive(0.2, 0.2);
 			Robot.geararm.setDesiredAngle(angle);
 			
 			angle+=0.0005;
 		}
-		Robot.chassis.drive(0.0,0.0);
-
-		while(angle >= 0){
-			Robot.chassis.drive(-0.15, -0.15);
-			angle-=0.0003;
-		}
-
-		Robot.geararm.restGear();
+		Robot.geararm.setGearToggle(true);
 		Robot.chassis.drive(0.0,0.0);
 	}
 }

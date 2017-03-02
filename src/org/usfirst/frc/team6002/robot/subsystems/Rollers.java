@@ -14,27 +14,70 @@ public class Rollers extends Subsystem {
     // here. Call these from Commands.
 	private VictorSP intakeMotor;
 	private VictorSP conveyorMotor;
-
+	private boolean intakeToggle;
+    private boolean reverseToggle;
+	
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
         //setDefaultCommand(new MySpecialCommand());
     }
-    public void rollerInit(){
+    
+    public Rollers(){
     	// need to verify these ports
     	intakeMotor = new VictorSP(Constants.kIntakeId);
     	conveyorMotor = new VictorSP(Constants.kConveyorId);
+    	intakeToggle = false;
+        reverseToggle = false;
     }
+    
     public void intakeOn(){
     	intakeMotor.set(-0.8);
     }
     public void intakeOff(){
     	intakeMotor.set(0.0);
     }
+    
+    public void intakeReverse(){
+        intakeMotor.set(0.8);
+    }
+
     public void conveyorOn(){
     	conveyorMotor.set(0.9);
     }
     public void conveyorOff(){
     	conveyorMotor.set(0.0);
+    }
+    public void conveyorReverse(){
+        conveyorMotor.set(-0.9);
+    }
+    
+    public void switchIntakeToggle(){
+    	intakeToggle = !intakeToggle;
+    }
+    
+    public boolean getIntakeToggle(){
+    	return intakeToggle;
+    }
+
+    public void reverse(){
+        intakeReverse();
+        conveyorReverse();
+    }
+
+    public void switchReverseToggle(){
+        reverseToggle = !reverseToggle;
+    }
+
+    public boolean getReverseToggle(){
+        return reverseToggle;
+    }
+
+    public void setIntakeToggle(boolean val){
+        intakeToggle = val;
+    }
+
+    public void setReverseToggle(boolean val){
+        reverseToggle = val;
     }
 }
 

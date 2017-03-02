@@ -30,7 +30,7 @@ public class Drive extends Subsystem {
 	int kForward = 1;
 	int kReverse = 0;
 	
-	// private static AHRS gyro;
+	private static AHRS gyro;
 
 	private static CANTalon leftFrontMotor;
 	private static CANTalon leftBackMotor;
@@ -44,8 +44,6 @@ public class Drive extends Subsystem {
     private PIDController drivePID;
     private PIDController turnPID;
 
-    private double maxDrivePIDOutput;
-
     //Custom made PIDSource class to return the average of both of the talons' encoder values
     private PIDSource talonEncoders;
 
@@ -53,10 +51,10 @@ public class Drive extends Subsystem {
 
 	private static DoubleSolenoid gearShiftSolenoid;
 	private static boolean enabled;
-	private static boolean isItInHighGear; 
+	private static boolean isInHighGear; 
 	
     public Drive(){
-        // gyro = new AHRS(SPI.Port.kMXP);
+        gyro = new AHRS(SPI.Port.kMXP);
 
         drivePIDOutput = new DummyPIDOutput();
         turnPIDOutput = new DummyPIDOutput();
@@ -72,20 +70,21 @@ public class Drive extends Subsystem {
         talonEncoders = new TalonEncoderPIDSource(leftFrontMotor, rightFrontMotor);
 
         drivePID = new PIDController(Constants.kPDriving, Constants.kIDriving, Constants.kDDriving, talonEncoders, drivePIDOutput);
-        // turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro, turnPIDOutput);
-        
-        maxDrivePIDOutput = .5;
+        turnPID = new PIDController(Constants.kPTurning, Constants.kITurning, Constants.kDTurning, gyro, turnPIDOutput);
 
-        drivePID.setOutputRange(-maxDrivePIDOutput, maxDrivePIDOutput); 
-        // turnPID.setOutputRange(-1.0, 1.0);
+        drivePID.setOutputRange(-Constants.kMaxDrivePIDOutput, Constants.kMaxDrivePIDOutput); 
+        turnPID.setOutputRange(-Constants.kMaxTurnPIDOutput, Constants.kMaxTurnPIDOutput);
 
         drivePID.setPercentTolerance(3);
+        turnPID.setPercentTolerance(3);
 
         airC = new Compressor(Constants.kCompressorId);
 
         gearShiftSolenoid = new DoubleSolenoid(0, 1);
+
         enabled = airC.enabled();
-        isItInHighGear = false;
+
+        isInHighGear = false;
     }
 
     public void initDefaultCommand() {
@@ -159,6 +158,24 @@ public class Drive extends Subsystem {
     	
     	System.out.println(enabled);
     }
+
+    public void setHighGear(){
+        gearShiftSolenoid.set(DoubleSolenoid.Value.kForward);
+        //System.out.println("Forward");
+    }
+
+    public void setLowGear(){
+        gearShiftSolenoid.set(DoubleSolenoid.Value.kReverse);
+        //System.out.println("Reverse");
+    }
+
+    public void switchShiftToggle(){
+        isInHighGear = !isInHighGear; 
+    }
+    
+    public boolean getShiftToggle(){
+        return isInHighGear; 
+    }
     
     public void driveWithJoysticks(double leftValue, double rightValue){
     	leftFrontMotor.set(-leftValue); // cube each value to decrease sensitivity.
@@ -168,57 +185,6 @@ public class Drive extends Subsystem {
     public void drive(double leftDrive, double rightDrive){
     	leftFrontMotor.set(leftDrive); // cube each value to decrease sensitivity.
     	rightFrontMotor.set(-rightDrive);
-    }
-    
-    public void driveStraightForADistance(double distanceInInches){
-    	// System.out.println("----------------------------------------------------------------");
-     //    //System.out.println("Gyro: " + gyro.pidGet() + " Gyro.get(): " + gyro.getAngle()%360);
-     //    System.out.print("Target Ticks:");
-     //    System.out.print(convertInchesToTicks(distanceInInches));
-     //    System.out.print("Encoder:");
-     //    System.out.print(talonEncoders.pidGet());
-     //    System.out.print("Inches:");
-     //    System.out.print(convertTicksToInches(talonEncoders.pidGet()));
-     //    System.out.println("----------------------------------------------------------------");
-
-        double targetRPM;// = Constants.maxDriveRPM * .6;
-
-        //Reset talons' encoders
-        resetTalonEncoders();
-        //Set talons to speed control and enable pid loops
-        setTalonsToSpeedControl();
-        //enableTalonsPIDLoop();
-        
-        drivePID.setSetpoint(convertInchesToTicks(distanceInInches));
-        drivePID.reset();    
-        drivePID.enable();
-
-        // while(!drivePID.onTarget()){
-        //     targetRPM = drivePID.get();
-        //     System.out.println(targetRPM + " " + talonEncoders.pidGet() + " " + drivePID.getSetpoint());
-        // }
-        drivePID.disable();
-
-        // rightFrontMotor.set(targetRPM);
-        // leftFrontMotor.set(targetRPM);
-
-        // System.out.print("\terr(native):");
-        // System.out.print(rightFrontMotor.getClosedLoopError());
-        // System.out.print("\tspd:");
-        // System.out.print(leftFrontMotor.getSpeed());
-        // System.out.print("\terr(rpm):");
-        // System.out.print(convertNativeToRPM(leftFrontMotor.getClosedLoopError()));
-        // System.out.print("\ttrg:");
-        // System.out.print(targetRPM);
-
-        // System.out.print("\tspd:");
-        // System.out.print(rightFrontMotor.getSpeed());
-        // System.out.print("\terr(rpm):");
-        // System.out.print(convertNativeToRPM(rightFrontMotor.getClosedLoopError()));
-        // System.out.print("\ttrg:");
-        // System.out.print(targetRPM);
-
-        // System.out.print("\n");
     }
 
     //UNIT CONVERSION FUNCTIONS
@@ -251,18 +217,6 @@ public class Drive extends Subsystem {
         double secondsPerMin = 60;
         double nativePerMillisec = 100;
         return (nativeVal*millisecPerSeconds*secondsPerMin)/(nativePerMillisec*Constants.kNativeUnitsPerRotation);
-    }
-
-    public void setHighGear(){
-    	gearShiftSolenoid.set(DoubleSolenoid.Value.kForward);
-    	//System.out.println("Forward");
-    	isItInHighGear = true;
-    }
-
-    public void setLowGear(){
-    	gearShiftSolenoid.set(DoubleSolenoid.Value.kReverse);
-    	//System.out.println("Reverse");
-    	isItInHighGear = false;
     }
 
     public double getLeftDriveSpeed(){
@@ -350,6 +304,34 @@ public class Drive extends Subsystem {
 
     public double getDrivePIDInput(){
         return talonEncoders.pidGet();
+    }
+
+    public boolean isDrivePIDOnTarget(){
+        return drivePID.onTarget();
+    }
+
+    public double getTurnPIDInput(){
+        return gyro.pidGet();
+    }
+
+    public double getTurnPIDOutput(){
+        return turnPID.get();
+    }
+
+    public double getGyroAngle(){
+        return gyro.getAngle();
+    }
+
+    public void enableTurnPID(){
+        turnPID.enable();
+    }
+
+    public void resetTurnPID(){
+        turnPID.reset();
+    }
+
+    public void setTurnPIDSetpoint(double angle){
+        turnPID.setSetpoint(angle);
     }
 
     public boolean isTalonControlEnabled(){

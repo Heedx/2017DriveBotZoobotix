@@ -20,6 +20,7 @@ public class OI {
 	// Button button = new JoystickButton(stick, buttonNumber);
 	private Joystick controller;
 	private ArrayList<XboxButton> buttons;
+	private ArrayList<XboxTrigger> triggers;
 
 	public OI(){
 		controller = new Joystick(0);
@@ -40,11 +41,31 @@ public class OI {
 
 	//Add the buttons into the array list
 	public void initializeButtons(){
-		//6 buttons
-		for(int i = 1; i <= 6; i++){
+		//7 buttons
+		for(int i = 1; i <= 7; i++){
 			// JoystickButton button = new JoystickButton(controller, i);
 			// XboxButton xButton = new XboxButton(button);
 			buttons.add(new XboxButton(new JoystickButton(controller, i)));
+		}
+	}
+
+	public void initializeTriggers(){
+		//Left Trigger
+		triggers.add(new XboxTrigger(controller, 2));	
+
+		//Right Trigger
+		triggers.add(new XboxTrigger(controller, 3));
+	}
+
+	public void getTriggerCurrentValues(){
+		for(XboxTrigger trig : triggers){
+			trig.updateCurrentValue();
+		}
+	}
+
+	public void updateTriggerPreviousValues(){
+		for(XboxTrigger trig : triggers){
+			trig.updatePreviousValue();
 		}
 	}
 
@@ -85,13 +106,17 @@ public class OI {
 	public XboxButton buttonRB(){
 		return buttons.get(5);
 	}
+	public XboxButton buttonStart(){
+		return buttons.get(6);
+	}
 
-	public boolean buttonLTPressed(){
-		return controller.getRawAxis(3) == 1;
+	public XboxTrigger triggerLT(){
+		return triggers.get(0);
 	}
-	public boolean buttonRTPressed(){
-		return controller.getRawAxis(2) == 1;
+	public XboxTrigger triggerRT(){
+		return triggers.get(1);
 	}
+
 	public boolean buttonStartPressed(){
 		return controller.getRawButton(8);
 	}

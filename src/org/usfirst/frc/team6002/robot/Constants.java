@@ -12,11 +12,13 @@ public class Constants {
 	public static double kShiftTarget = 1000;
 	
 	//Drive PID values
+	public static final double kMaxDrivePIDOutput = 0.5;
 	public static final double kPDriving = 0.0005;
 	public static final double kIDriving = 0.0;
 	public static final double kDDriving = 0.002;
 
-	public static final double kPTurning = 0.0;
+	public static final double kMaxTurnPIDOutput = 0.5;
+	public static final double kPTurning = 0.065;
 	public static final double kITurning = 0.0;
 	public static final double kDTurning = 0.0;
 
@@ -56,7 +58,7 @@ public class Constants {
 	
 	//GEARARM
 	public static int kGearArmId = 6;
-	public static double kPGearArm = 0.6;
+	public static double kPGearArm = 0.8;
 	public static double kIGearArm = 0.0;
 	public static double kDGearArm = 0.0;
 

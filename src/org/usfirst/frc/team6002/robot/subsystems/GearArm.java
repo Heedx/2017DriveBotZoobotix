@@ -15,14 +15,22 @@ public class GearArm extends Subsystem {
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
 	CANTalon gearArmMotor;
-	private boolean getGearToggle, dropGearToggle;
+	private boolean getGearToggle;
+	private boolean dropGearToggle;
+	
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
         //setDefaultCommand(new MySpecialCommand());
     	
     }
-    public void gearArmInit(){
+    
+    public GearArm(){
+    	dropGearToggle = false; 
+    	getGearToggle = false;
     	gearArmMotor = new CANTalon(Constants.kGearArmId);
+    	gearArmInit();
+    }
+    public void gearArmInit(){
     	gearArmMotor.changeControlMode(TalonControlMode.Position);
     	gearArmMotor.set(0.0);
     	gearArmMotor.enableBrakeMode(true);
@@ -42,22 +50,43 @@ public class GearArm extends Subsystem {
 		gearArmMotor.setPosition(0.06);
 		System.out.println("gear arm position set to 0");
 	}
-	public void restGear(){
+	public void homeGear(){
 		setDesiredAngle(0.0);
 	}
+	public void restGear(){
+		setDesiredAngle(gearArmMotor.getPosition());
+	}
 	public void getGear(){
-		getGearToggle = !getGearToggle;
 		setDesiredAngle(0.2);
-		System.out.println(getGearToggle);
 	}
 	public void dropGear(){
 		setDesiredAngle(0.4);
 	}
-//	public void runtoggle(boolean buttonValue){
-//		if(buttonValue && !buttonLast){
-//			buttonToggle = !buttonToggle
-//		}
-//		buttonLast = buttonValue
-//	}
-//	
+	public void inboundGear(){
+		setDesiredAngle(0.1); 
+	}
+	
+	public void switchToggle(){
+		dropGearToggle = !dropGearToggle;
+	}
+	
+	public boolean getGearToggle(){
+		return dropGearToggle;
+	}
+	
+	public void setGearToggle(boolean val){
+		dropGearToggle = val;
+	}
+	
+	public void switchGearToggle(){
+		getGearToggle = !getGearToggle;
+	}
+	
+	public boolean getInboundToggle(){
+		return getGearToggle;
+	}
+	
+	public void setInboundToggle(boolean val){
+		getGearToggle = val;
+	}
 }

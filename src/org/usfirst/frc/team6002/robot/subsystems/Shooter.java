@@ -17,8 +17,9 @@ public class Shooter extends Subsystem {
 
     // Put methods for controlling this subsystem
     // here. Call these from Commands.
-	CANTalon masterShooter, slaveShooter;
-	VictorSP serializerMotor;
+	private static CANTalon masterShooter, slaveShooter;
+	private static VictorSP serializerMotor;
+    private static boolean toggle;
 
     public void initDefaultCommand() {
         // Set the default command for a subsystem here.
@@ -30,6 +31,8 @@ public class Shooter extends Subsystem {
         masterShooter = new CANTalon(Constants.kMasterShooterId);
         slaveShooter = new CANTalon(Constants.kSlaveShooterId);
         serializerMotor = new VictorSP(Constants.kSerializerId); // check the serializer port number on roborio
+
+        toggle = false;
 
         shooterInitialize();
     }
@@ -57,9 +60,9 @@ public class Shooter extends Subsystem {
         slaveShooter.reverseOutput(true); //It's on the left side of the shooter so its output needs to be reversed
 
         masterShooter.configNominalOutputVoltage(+0.0f, -0.0f);
-        masterShooter.configPeakOutputVoltage(+10.8f, -10.8f);
+        masterShooter.configPeakOutputVoltage(+12f, -12f);
 
-        setShooterToSpeedControl();
+//        setShooterToSpeedControl();
 
     	//set up pid for master
     	masterShooter.setProfile(0);
@@ -69,10 +72,18 @@ public class Shooter extends Subsystem {
         masterShooter.setD(Constants.kDShooterVelocity);
 
         //Enable pid
-        enableShooterPID();
+//        enableShooterPID();
     }
+
+    public void switchToggle(){
+        toggle = !toggle;
+    }
+
+    public boolean getToggle(){
+        return toggle;
+    }
+
     public void setShooterVoltage(double volts){
-        setShooterToVoltageControl();
     	masterShooter.set(volts);
     } 
 
@@ -107,12 +118,13 @@ public class Shooter extends Subsystem {
     }
 
     public void shooterOn(){
-    	// setShooterVoltage(0.9);
-        setShooterSpeed(Constants.kShooterSpeed);
+    	setShooterVoltage(0.9);
+        //setShooterSpeed(Constants.kShooterSpeed);
     }
 
     public void shooterOff(){
-        disableShooterPID();
+        //disableShooterPID();
+        setShooterToVoltageControl();
     	setShooterVoltage(0);
     }
 
@@ -127,7 +139,5 @@ public class Shooter extends Subsystem {
     public void serializerOff(){
     	setSerializerSpeed(0.0);
     }
-
-    
 }
 
